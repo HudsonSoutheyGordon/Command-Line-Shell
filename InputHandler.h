@@ -7,10 +7,10 @@ typedef struct parsedInput {
     char** args;
     char* input;
     char* output;
-    bool isBg;
+    bool isBG;
 
 } ParsedInput;
 
-ParsedInput parseInput(char* inputStr);
+ParsedInput* parseInput(char* inputStr);
 
 #endif
