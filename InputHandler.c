@@ -15,17 +15,6 @@
 #include <stdbool.h>
 #include "InputHandler.h"
 
+ParsedInput parseInput(char* inputStr) {
 
-
-int main(int argc, char* argv[])
-{
-    printf("\n\n ############## START OF PROGRAM ##############\n\n");
-
-    char* myString;
-
-    parseInput(myString);
-
-    return EXIT_SUCCESS;
-
-    // Arbitrary comment
 }
