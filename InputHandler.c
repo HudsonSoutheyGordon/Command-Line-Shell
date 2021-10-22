@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "InputHandler.h"
+#include "Util.h"
 
 #define maxArgs 512
 
@@ -39,13 +40,16 @@ int determineToken(char* token) {
     char* cmpStr2 = ">";
     char* cmpStr3 = "&";
 
-    if (strcmp(token, cmpStr1)) {
+    if (token == NULL) {
+        return 0;
+    }
+    else if (strcmp(token, cmpStr1) == 0) {
         return 1;
     }
-    else if (strcmp(token, cmpStr2)) {
+    else if (strcmp(token, cmpStr2) == 0) {
         return 2;
     }
-    else if (strcmp(token, cmpStr3)) {
+    else if (strcmp(token, cmpStr3) == 0) {
         return 3;
     }
     else {
@@ -85,6 +89,8 @@ ParsedInput* parseInput(char* inputStr) {
     do {
         token = strtok_r(NULL, " ", &saveptr);
         tokenType = determineToken(token);
+
+        // DEBUG: I BELIEVE IT TAKES arg1 and thinks it is < in determineToken()
 
         switch(tokenType) {
             case 0:     // NULL : so break and the loop will break
@@ -126,8 +132,6 @@ ParsedInput* parseInput(char* inputStr) {
 
     } while (tokenType != 0);
 
-    currInput->command = calloc(strlen(token) + 1, sizeof(char));
-    strcpy(currInput->command, token);
 
     return currInput;
 }
