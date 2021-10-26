@@ -9,6 +9,7 @@ typedef struct parsedInput {
     char* input;
     char* output;
     bool isBG;
+    bool error;
 
 } ParsedInput;
 

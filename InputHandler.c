@@ -34,7 +34,7 @@
 * &        : 3
 * argument : 4
 *
-* Do not use for the initial command parse!
+* Do not use for the initial command parse i.e. the text for the command itself!
 */
 int determineToken(char* token) {
 
@@ -65,19 +65,12 @@ int determineToken(char* token) {
 */
 char* pidExpansion(char* inputStr) {
 
-    //char* myString = calloc(strlen(inputStr) + 1, sizeof(char));
-    //strcpy(myString, inputStr);
     char* myString = strdup(inputStr);
     char* myStringStartPtr = myString;
 
     int pid = getpid();
     char* myPid = calloc(10, sizeof(char));
     sprintf(myPid, "%d", pid);
-
-    // Check if we even need to expand
-    if (strstr(myString, "$$") == NULL) {
-        return inputStr;
-    }
 
     // Section Initializing vars
     char* endAddress = myString + strlen(myString);
@@ -99,7 +92,7 @@ char* pidExpansion(char* inputStr) {
             substrings = (char**)realloc(substrings, subStrCount * (sizeof(char*)));
         }
 
-        substrings[subStringIndex] = calloc(subStringLen, sizeof(char));
+        substrings[subStringIndex] = calloc(subStringLen + 1, sizeof(char));
         count++;
         // Add it to the array of substrings
         strncpy(substrings[subStringIndex], myString, subStringLen);
@@ -121,7 +114,6 @@ char* pidExpansion(char* inputStr) {
 
         // Passed the ending address
         if (myString >= endAddress) {
-            //printf("PassedEnding\n");
             shouldParse = false;
         }
         // No more $$ in string
@@ -133,7 +125,6 @@ char* pidExpansion(char* inputStr) {
             }
             substrings[subStringIndex] = calloc(strlen(myString) + 1, sizeof(char));
             strcpy(substrings[subStringIndex], myString);
-            //printf("We are done here. Got a null\n");
             shouldParse = false;
             hasTail = true;
             subStringIndex++;
@@ -142,7 +133,7 @@ char* pidExpansion(char* inputStr) {
     }
 
     if (!hasTail) {
-        updatedStr = (char*)malloc(strlen(myStringStartPtr)*sizeof(char) + (count * strlen(myPid) * sizeof(char)) - (count * 2 * sizeof(char)));
+        updatedStr = (char*)calloc(strlen(myStringStartPtr) + 1 + (count * strlen(myPid) - (count * 2)), sizeof(char));
     }
     else {
         updatedStr = (char*)malloc(strlen(myStringStartPtr) * sizeof(char) + (count * strlen(myPid) * sizeof(char)) + (strlen(myStringStartPtr) * sizeof(char)) - (count * 2 * sizeof(char)));
@@ -163,7 +154,6 @@ char* pidExpansion(char* inputStr) {
     free(substrings);
     free(myStringStartPtr);
 
-    //printf("Updated String: %s\n", updatedStr);
     return updatedStr;
 }
 
@@ -175,13 +165,18 @@ ParsedInput* parseInput(char* inputStr) {
 	ParsedInput* currInput = malloc(sizeof(ParsedInput));
     currInput->args = (char**)calloc(maxArgs, sizeof(char*));  // Allocate memory for an array of str pointers
     int argsIndex = 0;
+    bool doneArgs = false;
 
     currInput->isBG = false; // Default to false
+    currInput->error = false;
+    
+    currInput->input = NULL;
+    currInput->output = NULL;
 
 	// For use with strtok_r
 	char* saveptr;
 
-    // The first token is the command. We parse, allocate, and copy it.
+    // The first token is the commechand. We parse, allocate, and copy it.
     char* token = strtok_r(inputStr, " ", &saveptr);
     currInput->command = calloc(strlen(token) + 1, sizeof(char));
     strcpy(currInput->command, token);
@@ -206,10 +201,23 @@ ParsedInput* parseInput(char* inputStr) {
         token = strtok_r(NULL, " ", &saveptr);
         tokenType = determineToken(token);
 
-        // DEBUG: I BELIEVE IT TAKES arg1 and thinks it is < in determineToken()
+        // Redirection MUST come after the arguments are done
+        if (tokenType == 1 || tokenType == 2) {
+            doneArgs = true;
+        }
+        // If we found & but it is NOT at the end of the command, it is just an argument
+        if (tokenType == 3 && *saveptr != '\0') {
+            tokenType = 4;
+        }
+        // If there were args after we found an i/o redirection, return an error.
+        if (tokenType == 4 && doneArgs) {
+            currInput->error = true;
+        }
 
         switch(tokenType) {
             case 0:     // NULL : so break and the loop will break
+                currInput->args[argsIndex] = NULL;
+                argsIndex++;
                 break;
 
             case 1:     // < : thus the next token is a location for input

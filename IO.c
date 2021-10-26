@@ -37,20 +37,32 @@ void closeFiles(void) {
 
 }
 
+/*
+* Redirects the input (if necessary) to the proper source.
+* BG commands without redirection go to /dev/null
+*/
 void redirectInput(ParsedInput* pi) {
-    if (pi->input == NULL) {
+    int targetFD;
+    // If there was no redirection for a FG process, simply return.
+    if (pi->input == NULL && !pi->isBG) {
         return;
     }
-
-    int targetFD = open(pi->input, O_RDONLY, 0740);
+    // If there was no redirection for a BG process, set input to /dev/null
+    else if (pi->input == NULL && pi->isBG) {
+        targetFD = open("/dev/null", O_RDONLY);
+    }
+    else {
+        targetFD = open(pi->input, O_RDONLY, 0640);
+    }
 
     if (targetFD == -1) {
-        utilPrintf("Could not open the designated output file!\n");
+        printf("Could not open input file: %s", pi->input);
+        fflush(stdout);
         exit(1);
     }
 
-    // Use dup2 to point FD 1, i.e., standard output to targetFD
-    int result = dup2(targetFD, 1);
+    // Use dup2 to point FD 0, i.e., standard input to targetFD
+    int result = dup2(targetFD, 0);
     if (result == -1) {
         perror("dup2");
         exit(2);
@@ -61,18 +73,26 @@ void redirectInput(ParsedInput* pi) {
 
 /*
 * Redirects the stdout to the parsed input.
-* Sets the decodedExit flag on a fail.
-* Modified from canvas exploration: process and I/O
+* Modified from canvas exploration: process and I/O.
+* BG commands without redirection go to /dev/null
 */
 void redirectOutput(ParsedInput* pi) {
-    if (pi->output == NULL) {
+    int targetFD;
+    // If there was no redirection for a FG process, simply return.
+    if (pi->output == NULL && !pi->isBG) {
         return;
     }
-
-    int targetFD = open(pi->input, O_WRONLY | O_CREAT | O_TRUNC, 0740);
+    // If there was no redirection for a BG process, set output to /dev/null
+    else if (pi->output == NULL && pi->isBG) {
+        targetFD = open("/dev/null", O_WRONLY, 0640);
+    }
+    else {
+        targetFD = open(pi->output, O_WRONLY | O_CREAT | O_TRUNC, 0640);
+    }
 
     if (targetFD == -1) {
-        utilPrintf("Could not open the designated output file!\n");
+        printf("Could not open output file: %s", pi->output);
+        fflush(stdout);
         exit(1);
     }
 

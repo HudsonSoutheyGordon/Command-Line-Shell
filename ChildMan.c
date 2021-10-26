@@ -27,12 +27,19 @@ pid_t** bgChildren;
 int bgChildIndex;
 int bgChildrenSize;
 
+/*
+* Called once in main() to initialize global vars.
+*/
 void initChildren(void) {
 	bgChildren = calloc(5, sizeof(pid_t*));
 	bgChildIndex = 0;
 	bgChildrenSize = 5;
 }
 
+/*
+* Adds the designated pid_t to our array of pid_t's.
+* Crucial for killing processes at exit.
+*/
 void addChildPid(pid_t childPid) {
 
 	// Grow our array if need be
@@ -47,6 +54,10 @@ void addChildPid(pid_t childPid) {
 	bgChildIndex++;
 }
 
+/*
+* Removes the designated pid_t from our array of pid_t's.
+* Ensures we do not try to kill a non-existant process at exit.
+*/
 void removeChildPid(pid_t childPid) {
 	free(bgChildren[bgChildIndex]);
 	bgChildren[bgChildIndex] = NULL;
@@ -158,7 +169,6 @@ void externalFunc(ParsedInput* pi, int* hasBGChild, int** decodedExit) {
 	}
 	else {						// The parent
 		// We unblock SIGINT for the parent. Don't need to check if it was never blocked because it will just move on anyway.
-		// DEBUG, if we are having issues with this portion, it could be that we are not listing an oldset, when it exists?
 		sigset_t emptySet;
 		sigemptyset(&emptySet);
 		int tempStatus = sigprocmask(SIG_UNBLOCK, &emptySet, NULL);

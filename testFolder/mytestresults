@@ -1,0 +1,142 @@
+PRE-SCRIPT INFO
+  Grading Script PID: 290273
+  Note: your smallsh will report a different PID when evaluating $$
+: BEGINNING TEST SCRIPT
+: 
+: --------------------
+: Using comment (5 points if only next prompt is displayed next)
+: : 
+: 
+: --------------------
+: ls (10 points for returning dir contents)
+: junk
+junk2
+mytestresults
+p3testscript
+smallsh
+testdir279889
+: 
+: 
+: --------------------
+: ls out junk
+: : 
+: 
+: --------------------
+: cat junk (15 points for correctly returning contents of junk)
+: junk
+junk2
+mytestresults
+p3testscript
+smallsh
+testdir279889
+: 
+: 
+: --------------------
+: wc in junk (15 points for returning correct numbers from wc)
+:  6  6 60
+: 
+: 
+: --------------------
+: wc in junk out junk2; cat junk2 (10 points for returning correct numbers from wc)
+: :  6  6 60
+: 
+: 
+: --------------------
+: test -f badfile (10 points for returning error value of 1, note extraneous &)
+: : The most recent foreground process exited normally with the exit status: 1
+: 
+: 
+: --------------------
+: wc in badfile (10 points for returning text error)
+: Could not open input file: badfile: 
+: 
+: --------------------
+: badfile (10 points for returning text error)
+: Could not run program: No such file or directory
+: 
+: 
+: --------------------
+: sleep 100 background (10 points for returning process ID of sleeper)
+: The pid of the background process is: 290326
+: 
+: 
+: --------------------
+: pkill -signal SIGTERM sleep (10 points for pid of killed process, 10 points for signal)
+: (Ignore message about Operation Not Permitted)
+: pkill: killing pid 40411 failed: Operation not permitted
+pkill: killing pid 40420 failed: Operation not permitted
+pkill: killing pid 40433 failed: Operation not permitted
+pkill: killing pid 40436 failed: Operation not permitted
+pkill: killing pid 45875 failed: Operation not permitted
+pkill: killing pid 65312 failed: Operation not permitted
+pkill: killing pid 189779 failed: Operation not permitted
+pkill: killing pid 213357 failed: Operation not permitted
+pkill: killing pid 226524 failed: Operation not permitted
+pkill: killing pid 260438 failed: Operation not permitted
+pkill: killing pid 262003 failed: Operation not permitted
+pkill: killing pid 263662 failed: Operation not permitted
+pkill: killing pid 265382 failed: Operation not permitted
+pkill: killing pid 269753 failed: Operation not permitted
+pkill: killing pid 270508 failed: Operation not permitted
+pkill: killing pid 272082 failed: Operation not permitted
+pkill: killing pid 272790 failed: Operation not permitted
+pkill: killing pid 272794 failed: Operation not permitted
+pkill: killing pid 274799 failed: Operation not permitted
+pkill: killing pid 278984 failed: Operation not permitted
+pkill: killing pid 279357 failed: Operation not permitted
+pkill: killing pid 279399 failed: Operation not permitted
+pkill: killing pid 280532 failed: Operation not permitted
+pkill: killing pid 280781 failed: Operation not permitted
+pkill: killing pid 280853 failed: Operation not permitted
+pkill: killing pid 280899 failed: Operation not permitted
+pkill: killing pid 280930 failed: Operation not permitted
+pkill: killing pid 282896 failed: Operation not permitted
+pkill: killing pid 282939 failed: Operation not permitted
+pkill: killing pid 283009 failed: Operation not permitted
+pkill: killing pid 285865 failed: Operation not permitted
+pkill: killing pid 286086 failed: Operation not permitted
+pkill: killing pid 286154 failed: Operation not permitted
+pkill: killing pid 287335 failed: Operation not permitted
+The background process with pid: 290326 exited due to signal: 15
+: 
+: 
+: --------------------
+: sleep 1 background (10 pts for pid of bg ps when done, 10 for exit value)
+: The pid of the background process is: 290347
+: The background process with pid: 290347 finished: exit value 0
+: 
+: 
+: --------------------
+: pwd
+: /nfs/stak/users/southeyh/vsprojects/smallsh/smallsh/testFolder
+: 
+: 
+: --------------------
+: cd
+: : 
+: 
+: --------------------
+: pwd (10 points for being in the HOME dir)
+: /nfs/stak/users/southeyh
+: 
+: 
+: --------------------
+: mkdir testdir290275
+: : 
+: 
+: --------------------
+: cd testdir290275
+: : 
+: 
+: --------------------
+: pwd (5 points for being in the newly created dir)
+: /nfs/stak/users/southeyh/testdir290275
+: --------------------
+: Testing foreground-only mode (20 points for entry & exit text AND ~5 seconds between times)
+: 
+Entering foreground-only mode (& is now ignored)
+: Tue Oct 26 11:41:13 PDT 2021
+: : Tue Oct 26 11:41:18 PDT 2021
+: 
+Exiting foreground-only mode
+: Exiting!

@@ -19,16 +19,21 @@
 #include "ChildMan.h"
 #include "SigMan.h"
 
+/*
+* To exit the shell we display a prompt, and then ensure that if we have any
+*   children processes running, we terminate them and clean them up prior to exiting.
+*/
 void shellExit(void) {
     utilPrintf("Exiting!\n");
     killAllChildren();
     exit(0);
 }
 
+/*
+* Changes current working directory.
+* No argument defaults to cd $HOME
+*/
 void shellCD(char* filePath) {
-
-    // DEBUG - RMOVE
-    debugPWD();
 
     // If cd is entered without an argument, it should change
     //      to the directory as saved in the environment variable: "HOME"
@@ -41,10 +46,11 @@ void shellCD(char* filePath) {
         chdir(filePath);
     }
 
-    // DEBUG - RMOVE
-    debugPWD();
 }
 
+/*
+* Displays the how the most recent, non-builtin, foreground process terminated/exited.
+*/
 void shellStatus(int** fgExitStatus) {
     
     if (*(fgExitStatus[1]) == 0) {      // Normal Termination

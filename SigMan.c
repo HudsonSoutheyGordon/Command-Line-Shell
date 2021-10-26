@@ -20,10 +20,16 @@
 #include "ChildMan.h"
 #include "SigMan.h"
 
+/*
+* Handler function to be registered for SIGTSTP
+*/
 void handle_SIGTSTOP(int signo) {
 	toggleBG();	// In ChildMan in order to maintain global bool of foreground-only mode state
 }
 
+/*
+* Called once to register appropriate signal handlers.
+*/
 void registerSigHandlers(void) {
 
 	// Initialize SIGINT_action struct to be empty

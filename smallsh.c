@@ -22,6 +22,11 @@
 
 #define maxInputLength 2048
 
+/*
+* Debug function to pretty print back the values of the Parsed Input Struct.
+* Not implemented anywhere, but am leaving it in for posterity.
+* Is useful for any future expansion, or if you would like to toy around with the code.
+*/
 void printBackInput(ParsedInput* pi) {
     printf("---- The Input was: ----\n");
     fflush(stdout);
@@ -29,16 +34,32 @@ void printBackInput(ParsedInput* pi) {
     fflush(stdout);
     char* currentArg = pi->args[0];
     int argIndex = 0;
-    while(currentArg != NULL) {
+    while(argIndex < pi->argCount) {
         printf("Argument %d: %s\n", argIndex, currentArg);
         fflush(stdout);
         argIndex++;
         currentArg = pi->args[argIndex];
+        if (currentArg == NULL) {
+            break;
+        }
     }
-    printf("Input location: %s\n", pi->input);
-    fflush(stdout);
-    printf("Output location: %s\n", pi->output);
-    fflush(stdout);
+    if (pi->input != NULL) {
+        printf("Input location: %s\n", pi->input);
+        fflush(stdout);
+    }
+    else {
+        printf("No Input location\n");
+        fflush(stdout);
+    }
+    if (pi->output != NULL) {
+        printf("Output location: %s\n", pi->output);
+        fflush(stdout);
+    }
+    else {
+        printf("No Output location\n");
+        fflush(stdout);
+    }
+
     if (pi->isBG) {
         utilPrintf("Run in BG: true\n");
     }
@@ -49,8 +70,6 @@ void printBackInput(ParsedInput* pi) {
 
 int main(int argc, char* argv[])
 {
-    utilPrintf("\n\n ############## START OF PROGRAM ##############\n\n");
-
     initChildren();
     registerSigHandlers();
 
@@ -69,13 +88,13 @@ int main(int argc, char* argv[])
     fgExitStatus[0] = malloc(sizeof(int));
     *(fgExitStatus[0]) = 0;
     fgExitStatus[1] = malloc(sizeof(int));
+    ParsedInput* pi;
 
     while (true) {
 
         if (*hasBGChild > 0) {
             bgCheck(hasBGChild);
         }
-
 
         utilPrintf(": ");
 
@@ -89,12 +108,23 @@ int main(int argc, char* argv[])
             // Do nothing and repeat the loop
         }
         else {
-            //  NOT ARGUMENTS WILL NOT HAVE SPACES, thus we do not need to worry about echo $$ somthing else 
-            char* updatedStr = pidExpansion(inputtedString);
-            ParsedInput* pi = parseInput(updatedStr);
+            // Check if we even need to expand
+            if (strstr(inputtedString, "$$") != NULL) {
+                char* updatedStr = pidExpansion(inputtedString);
+                strcpy(inputtedString, updatedStr);
+                free(updatedStr);
+            } 
+
+            pi = parseInput(inputtedString);
+
+            //printBackInput(pi);
+
             // Determine if the command was one of our built ins.
-            char* exitString = "exit";
-            if (strcmp(pi->command, exitString) == 0) {
+            if (pi->error) {
+                utilPrintf("Error with your input. Please have command input follow this syntax: command [arg1 arg2 ...] [< input_file] [> output_file] [&]\n");
+                utilPrintf("Where items in [] are optional.\n");
+            }
+            else if (strcmp(pi->command, "exit") == 0) {
                 shellExit();
             } else if(strcmp(pi->command, "status") == 0) {
                 shellStatus(fgExitStatus);
@@ -108,7 +138,8 @@ int main(int argc, char* argv[])
 
             // We have done everything with the command, let's free up its struct
             freeParsedInput(pi);
-            //free(updatedStr);
+
+
         }
 
 

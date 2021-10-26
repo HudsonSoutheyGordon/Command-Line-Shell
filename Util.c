@@ -34,7 +34,7 @@ void utilPrintf(char* str) {
 int forkCount = 0;
 pid_t forkSafe(void) {
     forkCount++;
-    if (forkCount > 50) {
+    if (forkCount > 25) {
         perror("ForkBomb");
         fflush(stderr);
         abort();
@@ -50,76 +50,31 @@ void resetForkBombCounter(void) {
 }
 
 /*
-Debug function to get current working directory.
-Implementing this prior to having other solutions set up.
-*/
-void debugPWD(void) {
-    char* buf = getcwd(NULL, 0);
-    utilPrintf(buf);
-    utilPrintf("\n");
-    free(buf);
-}
-
-/*
 * Frees the members of the ParsedInput struct
 * in the reverse order that they were alloc'd.
 * Then free the struct itself.
 */
 void freeParsedInput(ParsedInput* pi) {
 
-    free(pi->output);
-    free(pi->input);
+    if (pi->output != NULL) {
+        free(pi->output);
+        pi->output = NULL;
+    }
+    if (pi->input != NULL) {
+        free(pi->input);
+        pi->input = NULL;
+    }
     // Iterate through our array of args and free them all
     for (int i = 0; i < pi->argCount; i++) {
         free(pi->args[i]);
     }
+
     free(pi->args);
+    pi->args = NULL;
     free(pi->command);
+    pi->command = NULL;
 
     free(pi);
-}
-
-/*
-* Tokenize the PATH variable.
-* Returns a char** which points to all the paths that were parsed
-*/
-char** tokenizePATH(int* pathsLength) {
-    char* homeEnvVar = getenv("PATH");
-
-    // Start with an array of ~30 pointers. Will realloc if we exceed
-    int callocSize = 30;
-    char** paths = (char**)calloc(callocSize, sizeof(char*));
-
-    // For use with strtok_r
-    char* saveptr;
-    char* token = strtok_r(homeEnvVar, ":", &saveptr);
-
-    // Edge case of an empty path variable
-    if (token == NULL) {
-        perror("Your PATH variable is empty. Thus there is no such program.\n");
-        fflush(stderr);
-        // TO DO: Raise error
-        return NULL;
-    }
-
-    int pathsIndex = 0;
-    while (token != NULL) {
-
-        // If we've reached the end of our allocated space. We need to resize.
-        if (pathsIndex == (callocSize - 1)) {
-            callocSize += 10;
-            paths = (char**)realloc(paths, callocSize * sizeof(char*));
-        }
-
-        // Place the parsed path string into our array of strings
-        paths[pathsIndex] = token;
-        pathsIndex++;
-
-        token = strtok_r(NULL, ":", &saveptr);
-    }
-    // We dereference our int pointer to pass back the length of our array of paths.
-    *pathsLength = pathsIndex;
-    return paths;
 }
 
 
