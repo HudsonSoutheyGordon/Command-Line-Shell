@@ -15,6 +15,8 @@
 #include <stdbool.h>
 #include "InputHandler.h"
 #include "Util.h"
+#include "ChildMan.h"
+#include "SigMan.h"
 
 #define maxArgs 512
 
@@ -58,6 +60,114 @@ int determineToken(char* token) {
 }
 
 /*
+* Takes the original inputted string and expands any instance of $$ into the shell's pid.
+* Returns a pointer to the string with $$ expanded.
+*/
+char* pidExpansion(char* inputStr) {
+
+    //char* myString = calloc(strlen(inputStr) + 1, sizeof(char));
+    //strcpy(myString, inputStr);
+    char* myString = strdup(inputStr);
+    char* myStringStartPtr = myString;
+
+    int pid = getpid();
+    char* myPid = calloc(10, sizeof(char));
+    sprintf(myPid, "%d", pid);
+
+    // Check if we even need to expand
+    if (strstr(myString, "$$") == NULL) {
+        return inputStr;
+    }
+
+    // Section Initializing vars
+    char* endAddress = myString + strlen(myString);
+    int subStringIndex = 0;
+    int subStrCount = 4;
+    char** substrings = (char**)malloc(subStrCount * sizeof(char*));
+    bool shouldParse = true;
+    bool hasTail = false;
+    int count = 0;
+    char* tailStr = NULL;
+    char* updatedStr;
+
+    while (shouldParse) {
+        int subStringLen = strstr(myString, "$$") - myString;
+
+        // Allocate for the substring we found based on the subStringlength
+        if (subStringIndex == subStrCount - 1) {
+            subStrCount *= 2;
+            substrings = (char**)realloc(substrings, subStrCount * (sizeof(char*)));
+        }
+
+        substrings[subStringIndex] = calloc(subStringLen, sizeof(char));
+        count++;
+        // Add it to the array of substrings
+        strncpy(substrings[subStringIndex], myString, subStringLen);
+
+        // Now do the same for pid
+        subStringIndex++;
+
+        if (subStringIndex == subStrCount - 1) {
+            subStrCount *= 2;
+            substrings = (char**)realloc(substrings, subStrCount * (sizeof(char*)));
+        }
+
+        substrings[subStringIndex] = calloc(strlen(myPid) + 1, sizeof(char));
+        strcpy(substrings[subStringIndex], myPid);
+
+        subStringIndex++;
+        // Move the pointer forward
+        myString += subStringLen + 2;
+
+        // Passed the ending address
+        if (myString >= endAddress) {
+            //printf("PassedEnding\n");
+            shouldParse = false;
+        }
+        // No more $$ in string
+        else if (strstr(myString, "$$") == NULL) {
+
+            if (subStringIndex == subStrCount - 1) {
+                subStrCount *= 2;
+                substrings = (char**)realloc(substrings, subStrCount * (sizeof(char*)));
+            }
+            substrings[subStringIndex] = calloc(strlen(myString) + 1, sizeof(char));
+            strcpy(substrings[subStringIndex], myString);
+            //printf("We are done here. Got a null\n");
+            shouldParse = false;
+            hasTail = true;
+            subStringIndex++;
+        }
+
+    }
+
+    if (!hasTail) {
+        updatedStr = (char*)malloc(strlen(myStringStartPtr)*sizeof(char) + (count * strlen(myPid) * sizeof(char)) - (count * 2 * sizeof(char)));
+    }
+    else {
+        updatedStr = (char*)malloc(strlen(myStringStartPtr) * sizeof(char) + (count * strlen(myPid) * sizeof(char)) + (strlen(myStringStartPtr) * sizeof(char)) - (count * 2 * sizeof(char)));
+    }
+
+    int i = 0;
+    while (i < subStringIndex) {
+        if (i == 0) {
+            strcpy(updatedStr, substrings[i]);
+        }
+        else {
+            strcat(updatedStr, substrings[i]);
+        }
+        free(substrings[i]);
+        i++;
+    }
+
+    free(substrings);
+    free(myStringStartPtr);
+
+    //printf("Updated String: %s\n", updatedStr);
+    return updatedStr;
+}
+
+/*
 * Will parse the input of the given command and other params.
 * Will create, populate, and return the parsed data in the form of a pointer to a ParsedInput struct.
 */
@@ -75,6 +185,12 @@ ParsedInput* parseInput(char* inputStr) {
     char* token = strtok_r(inputStr, " ", &saveptr);
     currInput->command = calloc(strlen(token) + 1, sizeof(char));
     strcpy(currInput->command, token);
+
+    // Commands will all need their first argument to just be the command again.
+    // As such, we manually set that redundancy now.
+    currInput->args[0] = calloc(strlen(token) + 1, sizeof(char));   // Allocate for the pointer to the argument string
+    strcpy(currInput->args[0], token);
+    argsIndex++;
 
     /*
     * Now we are in a position, where the next token could be any of the following:
@@ -132,6 +248,13 @@ ParsedInput* parseInput(char* inputStr) {
 
     } while (tokenType != 0);
 
+    currInput->argCount = argsIndex;
+    
+    // realloc the args to a smaller size to fit the number of args
+    currInput->args = (char**)realloc(currInput->args, argsIndex * sizeof(char*));
+
+    // We reset the fork counter here (our failsafe), since receiving input means the program is operating normally
+    resetForkBombCounter();
 
     return currInput;
 }

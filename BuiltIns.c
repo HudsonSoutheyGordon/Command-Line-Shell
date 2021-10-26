@@ -16,18 +16,45 @@
 #include "InputHandler.h"
 #include "BuiltIns.h"
 #include "Util.h"
+#include "ChildMan.h"
+#include "SigMan.h"
 
 void shellExit(void) {
-    // TODO: Cleanup any processes
     utilPrintf("Exiting!\n");
+    killAllChildren();
     exit(0);
 }
 
 void shellCD(char* filePath) {
-    utilPrintf("To be implemented: CD!\n");
+
+    // DEBUG - RMOVE
+    debugPWD();
+
+    // If cd is entered without an argument, it should change
+    //      to the directory as saved in the environment variable: "HOME"
+    if (filePath == NULL) {
+        char* homeEnvVar = getenv("HOME");
+        chdir(homeEnvVar);
+    }
+    // Otherwise simply change directory to the relative/absolute path given.
+    else {
+        chdir(filePath);
+    }
+
+    // DEBUG - RMOVE
+    debugPWD();
 }
 
-void shellStatus(void) {
-    utilPrintf("To be implemented: Status!\n");
+void shellStatus(int** fgExitStatus) {
+    
+    if (*(fgExitStatus[1]) == 0) {      // Normal Termination
+        int exitStatusVal = *(fgExitStatus[0]);
+        printf("The most recent foreground process exited normally with the exit status: %d\n", exitStatusVal);
+    }
+    else {                              // Abnormal Termination
+        int exitStatusVal = *(fgExitStatus[0]);
+        printf("The most recent foreground process terminated via signal %d\n", exitStatusVal);
+    }
+
 }
 

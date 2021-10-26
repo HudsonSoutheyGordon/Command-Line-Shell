@@ -16,6 +16,9 @@
 #include "InputHandler.h"
 #include "BuiltIns.h"
 #include "Util.h"
+#include "ChildMan.h"
+#include "SigMan.h"
+#include "IO.h"
 
 #define maxInputLength 2048
 
@@ -48,45 +51,70 @@ int main(int argc, char* argv[])
 {
     utilPrintf("\n\n ############## START OF PROGRAM ##############\n\n");
 
+    initChildren();
+    registerSigHandlers();
+
     char* inputtedString;
     inputtedString = calloc(maxInputLength, sizeof(char));
 
+    int* hasBGChild = malloc(sizeof(int));
+    *hasBGChild = 0;
+    
+    // The first int is the value, the second is a bool indicating if it terminated normally.
+    // 0 = normal termination
+    // 1 = abnormal termination
+    // We alloc the array and then initialize the values to 0, 0
+    // These are used for the entirety of the program and thus do not get free()'d.
+    int** fgExitStatus = (int**)calloc(2, sizeof(int));
+    fgExitStatus[0] = malloc(sizeof(int));
+    *(fgExitStatus[0]) = 0;
+    fgExitStatus[1] = malloc(sizeof(int));
+
     while (true) {
+
+        if (*hasBGChild > 0) {
+            bgCheck(hasBGChild);
+        }
+
+
         utilPrintf(": ");
 
         fgets(inputtedString, maxInputLength, stdin);
-        // fgets leaves a trailing \n - Citation: https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
+        // to removie the trailing \n - Citation: https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
         if (!inputtedString[0] == '\0') {
             inputtedString[strcspn(inputtedString, "\n")] = 0;
         }
-        
+
         if (inputtedString[0] == '#' || inputtedString[0] == '\0') {
             // Do nothing and repeat the loop
         }
         else {
-            //printBackInput(parseInput(inputtedString));
-            ParsedInput* pi = parseInput(inputtedString);
-            
+            //  NOT ARGUMENTS WILL NOT HAVE SPACES, thus we do not need to worry about echo $$ somthing else 
+            char* updatedStr = pidExpansion(inputtedString);
+            ParsedInput* pi = parseInput(updatedStr);
             // Determine if the command was one of our built ins.
             char* exitString = "exit";
             if (strcmp(pi->command, exitString) == 0) {
                 shellExit();
             } else if(strcmp(pi->command, "status") == 0) {
-                shellStatus();
+                shellStatus(fgExitStatus);
             }
             else if (strcmp(pi->command, "cd") == 0) {
-                shellCD(pi->args[0]);
+                shellCD(pi->args[1]);
             }
             else {
-                utilPrintf("TODO: Set up with exec");
-                // Run using exec()
+                externalFunc(pi, hasBGChild, fgExitStatus);
             }
 
+            // We have done everything with the command, let's free up its struct
+            freeParsedInput(pi);
+            //free(updatedStr);
         }
+
+
 
     }
 
     return EXIT_SUCCESS;
 
-    // Arbitrary comment
 }

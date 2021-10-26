@@ -3,6 +3,6 @@
 
 void shellExit(void);
 void shellCD(char* filePath);
-void shellStatus(void);
+void shellStatus(int** fgExitStatus);
 
 #endif

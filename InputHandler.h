@@ -5,6 +5,7 @@ typedef struct parsedInput {
 
     char* command;
     char** args;
+    int argCount;
     char* input;
     char* output;
     bool isBG;
@@ -12,5 +13,6 @@ typedef struct parsedInput {
 } ParsedInput;
 
 ParsedInput* parseInput(char* inputStr);
+char* pidExpansion(char* inputStr);
 
 #endif
