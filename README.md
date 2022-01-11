@@ -1,5 +1,7 @@
 # Command-Line-Shell in C
 ---
+![Smallsh in action](smallsh_demo.gif)
+
 
 Smallsh is a toy shell program built in C that implements a subset of features of the common shell, bash.
 Commands can be inputted with the following syntax:
